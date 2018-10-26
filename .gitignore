@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# refer
+GA.py
+Life.py
+TSP_GA.py
+TSP_GA_w.py
+
 # C extensions
 *.so
 
