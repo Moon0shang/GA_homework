@@ -6,58 +6,80 @@ class GA_core(object):
 
     def __init__(self, arg_range, crossover_rate, mutation_rate, accuracy, **args):
 
-        self.range = arg_range
+        self.ranges = arg_range
         self.p_c = crossover_rate  # 0.4~0.9,mating when smaller than p_c
         self.p_m = mutation_rate   # 0.0001~0.1,mutation when smaller than p_m
         self.accuracy = accuracy
         self.best = None
-        self.population = []
+        # self.population = []
         self.generation = 1
         self.cross_count = 0
         self.mutation_count = 0
 
-    def encoding(self, number):
+    def get_length(self, arg_num):
+
+        bin_ranges = bin(self.ranges[1]).replace('0b', '')
+        single_length = len(bin_ranges) + 1
+        total_length = single_length * arg_num
+
+        return single_length, total_length
+
+    def encoding(self, number, single_length):
 
         number = number / self.accuracy
-        bin_num = bin(number)[2:]
-        list_num = list(bin_num)
+        bin_num = bin(number).replace('0b', '')
+        # 归一化二进制长度，负数第一位为-，正数为0
+        if bin_num[0] == '-':
+            sub = single_length - len(bin_num)
+            if sub > 0:
+                s = '0' * sub
+                s_list = ['-', s, bin_num[1:]]
+                bin_num = ''.join(s_list)
+        else:
+            sub = single_length - len(bin_num)
+            s = '0' * sub
+            s_list = [s, bin_num]
+            s_list = ''.join(s_list)
 
-        return list_num
+        return bin_num
 
-    def decoding(self, list_num):
-        """ l = 0
+    def decoding(self, bin_num):
+        """
+        ordinary algorithm
+        l = 0
         s = 0
         for i in range(l):
             s += b[i] * (2 ** i)
+
         # decoding formula
+
         x = range_l + (range_r - range_l) / (2 ** l - 1) * s
- """
-        bin_num = ''.join(list_num)
+        """
+
         number = int(bin_num, base=2) * self.accuracy
 
         return number
 
-    def initial(self, arg_num):
+    def initial(self, group_num, arg_num):
         """
         group initialize, by generate random numbers
         should catious that the initial should obey the valid define
         if we have a good group, then we can improve the algorithm
         """
-        # initial
-        x = np.empty(arg_num)
-
-        for i in range(arg_num):
-
-            r[i] = random.randrange(
-                self.range[0], self.range[1], step=self.accuracy)
+        # initial group
+        group = np.random.uniform(
+            self.range[0], self.range[1], [group_num, arg_num])
 
         # transfer number to binary list representation
-        for i in range(arg_num):
+        for i in range(group_num):
+            for j in range(arg_num):
 
-            x[i] = self.encoding(x[i])
+                population[i][j] = self.encoding(group[i][j])
 
-        return x
+        return population
 
+
+"""
     def fitness_function(self, f, arg_num, x):
         """
         fitness function are using to evaluate the adaption of each chromosome
@@ -108,7 +130,7 @@ class GA_core(object):
             for i in range(len(x)-1):
                 s += np.power((x[i+1]-x[i]), 2)
             y = 100*(s+np.sum(np.power(x-1, 2)))
-
+ """
     def select(self, fit, l):
 
         total = 0
