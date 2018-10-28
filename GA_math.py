@@ -5,7 +5,7 @@ from fit_func import f_func
 
 class GA_core(object):
 
-    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.6, mutation_rate=0.01,  **args):
+    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.7, mutation_rate=0.03,  **args):
 
         self.arg_num = arg_num
         self.ranges = arg_range
@@ -81,7 +81,7 @@ class GA_core(object):
 
         return num_pop
 
-    def initial(self, group_num):
+    def initial(self, group_num, a):
         """
         group initialize, by generate random numbers
         should catious that the initial should obey the valid define
@@ -90,7 +90,7 @@ class GA_core(object):
         # initial group
         population = np.random.uniform(
             self.ranges[0], self.ranges[1], [group_num, self.arg_num])
-        population = np.round(population, 3)
+        population = np.round(population, a)
 
         return population
 
@@ -126,6 +126,12 @@ class GA_core(object):
         fit = np.reciprocal(fit)
         l = population.shape[0]
         pop_new = np.empty([l, self.arg_num])
+        # 只保留前20% 的个体
+        for i in range(int(l / 5)):
+            idx = np.where(fit == np.max(fit))[0][0]
+            # remove fit max
+            # store fit max
+            # store population max
         total = np.sum(fit)
         p0 = fit / total
         p = np.cumsum(p0)
@@ -157,7 +163,7 @@ class GA_core(object):
             l_v = len(mating)
 
         for i in range(int(l_v/2)):
-            pos = np.random.randint(self.length//2, self.length)
+            pos = np.random.randint(2, self.length)
             for i in range(self.arg_num):
                 idx1 = pos + self.length*self.arg_num
                 idx2 = self.length*(self.arg_num+1)
@@ -172,8 +178,9 @@ class GA_core(object):
         l = len(cr_pop)
 
         for i in range(l):
-            for k in range(2*self.length//3):
-                k = k+self.length//3
+            for k in range(self.length - 2):
+                k = k+2
+                # k = k+2*self.length//5
                 for j in range(self.arg_num):
 
                     p = np.random.rand()
@@ -189,7 +196,7 @@ class GA_core(object):
 
 if __name__ == '__main__':
     Ga = GA_core(2, [-5.12, 5.12], 0.0001)
-    population = Ga.initial(500)
+    population = Ga.initial(100, 5)
 
     for i in range(1000):
         y = Ga.fitness(population, i)
@@ -198,13 +205,21 @@ if __name__ == '__main__':
         cr_pop = Ga.crossover(bin_pop)
         mu_pop = Ga.mutation(cr_pop)
         population = Ga.decoding(mu_pop)
+        print(np.max(population))
+
+        if i == 0:
+            m_fit = [Ga.best-0.00001]
+        else:
+            if Ga.best < m_fit[i - 1]:
+                m_fit.append(Ga.best-0.00001)
+            else:
+                m_fit.append(m_fit[i-1])
         print('generation:'+'%s' % (i+1))
 
     print(Ga.best)
     print(Ga.best_group)
     fig = plt.figure()
     plt.plot(Ga.best_history)
-    ze = [0 for i in range(1000)]
-    plt.plot(ze, color='r')
+    plt.plot(m_fit, color='r')
     plt.show()
     # print(Ga.best_history)
