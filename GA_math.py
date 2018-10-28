@@ -1,49 +1,62 @@
-import random
 import numpy as np
+import matplotlib.pyplot as plt
+from fit_func import f_func
 
 
 class GA_core(object):
 
-    def __init__(self, arg_range, crossover_rate, mutation_rate, accuracy, **args):
+    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.6, mutation_rate=0.01,  **args):
 
+        self.arg_num = arg_num
         self.ranges = arg_range
         self.p_c = crossover_rate  # 0.4~0.9,mating when smaller than p_c
         self.p_m = mutation_rate   # 0.0001~0.1,mutation when smaller than p_m
         self.accuracy = accuracy
-        self.best = None
-        # self.population = []
-        self.generation = 1
-        self.cross_count = 0
-        self.mutation_count = 0
+        self.length = self.get_length()
+        self.best = 9999
+        self.best_history = []
+        self.best_group = []
 
-    def get_length(self, arg_num):
+    def get_length(self):
 
-        bin_ranges = bin(self.ranges[1]).replace('0b', '')
+        bin_ranges = bin(int(self.ranges[1] / self.accuracy)).replace('0b', '')
         single_length = len(bin_ranges) + 1
-        total_length = single_length * arg_num
+        # total_length = single_length * self.arg_num
 
-        return single_length, total_length
+        return single_length
 
-    def encoding(self, number, single_length):
+    def encoding(self, population):
 
-        number = number / self.accuracy
-        bin_num = bin(number).replace('0b', '')
-        # 归一化二进制长度，负数第一位为-，正数为0
-        if bin_num[0] == '-':
-            sub = single_length - len(bin_num)
-            if sub > 0:
-                s = '0' * sub
-                s_list = ['-', s, bin_num[1:]]
-                bin_num = ''.join(s_list)
-        else:
-            sub = single_length - len(bin_num)
-            s = '0' * sub
-            s_list = [s, bin_num]
-            s_list = ''.join(s_list)
+        g_n = population.shape[0]
+        a_n = population.shape[1]
+        list_pop = []
+        bin_pop1 = []
+        for i in range(g_n):
+            for j in range(a_n):
+                population[i][j] = population[i][j] / self.accuracy
+                bin_n = bin(int(population[i][j])).replace('0b', '')
+                # 归一化二进制长度，负数第一位为-，正数为0
 
-        return bin_num
+                sub = self.length - len(bin_n)
+                if sub > 0:
+                    if bin_n[0] == '-':
+                        s = '0' * sub
+                        s_list = ['-', s, bin_n[1:]]
+                        bin_pop1.append(''.join(s_list))
+                    else:
 
-    def decoding(self, bin_num):
+                        s = '0' * sub
+                        s_list = [s, bin_n]
+                        bin_pop1.append(''.join(s_list))
+                else:
+                    bin_pop1.append(bin_n)
+            bin_pop = ''.join(bin_pop1)
+            bin_pop1.clear()
+            list_pop.append(list(bin_pop))
+
+        return list_pop
+
+    def decoding(self, list_pop):
         """
         ordinary algorithm
         l = 0
@@ -55,112 +68,143 @@ class GA_core(object):
 
         x = range_l + (range_r - range_l) / (2 ** l - 1) * s
         """
+        l = len(list_pop)
+        bin_pop = []
+        for i in range(l):
+            list_pop[i] = ''.join(list_pop[i])
+        num_pop = np.empty([l, self.arg_num])
+        for i in range(l):
+            for j in range(self.arg_num):
 
-        number = int(bin_num, base=2) * self.accuracy
+                num_pop[i][j] = int(
+                    list_pop[i][j*self.length:(j+1)*self.length], base=2) * self.accuracy
 
-        return number
+        return num_pop
 
-    def initial(self, group_num, arg_num):
+    def initial(self, group_num):
         """
         group initialize, by generate random numbers
         should catious that the initial should obey the valid define
         if we have a good group, then we can improve the algorithm
         """
         # initial group
-        group = np.random.uniform(
-            self.range[0], self.range[1], [group_num, arg_num])
-
-        # transfer number to binary list representation
-        for i in range(group_num):
-            for j in range(arg_num):
-
-                population[i][j] = self.encoding(group[i][j])
+        population = np.random.uniform(
+            self.ranges[0], self.ranges[1], [group_num, self.arg_num])
+        population = np.round(population, 3)
 
         return population
 
+    def fitness(self, population, epoch):
 
-"""
-    def fitness_function(self, f, arg_num, x):
+        group_num = len(population)
+
+        y = np.empty(group_num)
+
+        for i in range(group_num):
+            y[i] = f_func(population[i])
+
+        best = np.min(y)
+        b = np.where(y == best)[0][0]
+
+        if best < self.best:
+            self.best = best
+            best_population = population[b]
+            self.best_group = best_population
+
+        # a_p = self.best_group
+        self.best_history.append(best)
+        # print('best:', self.best)
+        # print('y:', y)
+        return y
+
+    def select(self, fit, population):
         """
-        fitness function are using to evaluate the adaption of each chromosome
-        it was always confirmed by the destination
-        the better the adoption, the better the chromosome
+        choose better chromosome
         """
-        # decoding
-        for i in range(arg_num):
-            x[i] = self.decoding(x[i])
-
-        if f == 1:
-            y = x[0] ** 2 + x[1] ** 2
-        elif f == 2:
-            y = 100 * ((x[1] - x[0] ** 2) ** 2) + (x[0] - 1) ** 2
-        elif f == 3:
-            y = (1+(x[0]+x[1]+1)**2+(19-14*x[0]+(3*(x[1]**2)-14*x[0]+6*x[0]*x[1]+3*(x[0**2]))) *
-                 (30+(2*x[0]-3*(x[1]**2)**2)*(18-32*x[0]+12*(x[0]**2)+48*x[1]-36*x[0]*x[1]+27*x[1])))
-        elif f == 4:
-            y = (x[0] ** 2 + x[1] - 11) ** 2 + (x[0] + x[1] ** 2 - 7) ** 2
-        elif f == 5:
-            y = 4 * (x[0] ** 2) - 2.1 * (x[0] ** 4) + (1 / 3) * (x[0]
-                                                                 ** 6) + x[0] * x[1] - 4 * (x[1] ** 2) + 4 * (x[1] ** 4)
-        elif f == 6:
-            y = x[0] ** 2 + x[1] ** 2 - 0.3 * \
-                np.cos(3 * np.pi * x[0]) + 0.3 * np.cos(4 * np.pi * x[1]) + 0.3
-        elif f == 7:
-            print('no functions!')
-        elif f == 8:
-            y = 1+x*np.sin(4*np.pi*x[0])-x[1]*np.sin(4*np.pi*x[1]+np.pi)+(np.sin(6*np.sqrt(np.power(
-                x[0], 2)+np.power(x[1], 2))))/(6*np.sqrt(np.power(x[0], 2)+np.power(x[1], 2))+np.power(10, -15))
-        elif f == 9:
-            y = np.sum(np.power(x, 2))
-        elif f == 10:
-            y = np.sum(np.power(np.ceil(x + 0.5), 2))
-        elif f == 11:
-            y = np.sum(np.power(np.sum(x), 2))
-        elif f == 12:
-            y = np.sum(np.abs(x)) + np.nanprod(x)
-        elif f == 13:
-            print('no functions!')
-        elif f == 14:
-            np.sum(np.power(x, 2) / 4000) - np.nanprod(np.cos(x) / i) + 1
-        elif f == 15:
-            y = -20 * np.exp(-0.2 * np.sqrt(np.sum(x) / len(x))) - \
-                np.exp(np.sum(np.cos(2 * np.pi * x))) + 20 + np.e
-        elif f == 16:
-            s = 0
-            for i in range(len(x)-1):
-                s += np.power((x[i+1]-x[i]), 2)
-            y = 100*(s+np.sum(np.power(x-1, 2)))
- """
-    def select(self, fit, l):
-
         total = 0
-        p = []
-        for i in range(len(self.population)):
-            total += fit[i]
-        for i in range(len(l)):
-            p[i] = fit[i]/total
-        '''rank mechanism: choose the best k ones'''
-        return p
+        fit1 = fit
+        fit = np.reciprocal(fit)
+        l = population.shape[0]
+        pop_new = np.empty([l, self.arg_num])
+        total = np.sum(fit)
+        p0 = fit / total
+        p = np.cumsum(p0)
+        # 防止最后出现相加略小于1的情况
+        p[-1] = 1
 
-    def crossover(self, l):
+        c = np.random.rand(l)
 
-        p = random.random()
-        if p < self.p_c:
-            # cross
-            position = random.randint(range(l), 3).sort()
-        else:
-            # copy
-            pass
+        for i in range(l):
 
-    def mutation(self, l):
+            s = np.where(p >= c[i])[0][0]
+            pop_new[i] = population[s]
 
-        p = random.random()
-        if p < self.p_m:
-            # mutation
-            postion = random.randint(0, l)
+        return pop_new
 
-    def update_group(self):
-        """
-        parent be replaced by new ones, all or partly
-        """
-        pass
+    def crossover(self, pop_new):
+
+        l = len(pop_new)
+        p = np.random.rand(l)
+        mating = np.where(p > self.p_c)[0]
+        # 打乱数组
+        np.random.shuffle(mating)
+        l_v = len(mating)
+        if l_v == 0:
+            return pop_new
+
+        elif l_v % 2 != 0:
+            mating = mating[:-1]
+            l_v = len(mating)
+
+        for i in range(int(l_v/2)):
+            pos = np.random.randint(self.length//2, self.length)
+            for i in range(self.arg_num):
+                idx1 = pos + self.length*self.arg_num
+                idx2 = self.length*(self.arg_num+1)
+                t = pop_new[mating[i*2]][idx1:idx2]
+                pop_new[mating[i*2]][idx1:idx2] = pop_new[mating[i*2+1]][idx1:idx2]
+                pop_new[mating[i*2+1]][idx1:idx2] = t
+
+        return pop_new
+
+    def mutation(self, cr_pop):
+
+        l = len(cr_pop)
+
+        for i in range(l):
+            for k in range(2*self.length//3):
+                k = k+self.length//3
+                for j in range(self.arg_num):
+
+                    p = np.random.rand()
+
+                    if p < self.p_m:
+                        # mutation, transfer 1 -> 0; 0 -> 1
+                        # if cr_pop[i][k] != '-':
+                        cr_pop[i][k+j*self.length] = str(
+                            np.abs(int(cr_pop[i][k+j*self.length])-1))
+
+        return cr_pop
+
+
+if __name__ == '__main__':
+    Ga = GA_core(2, [-5.12, 5.12], 0.0001)
+    population = Ga.initial(500)
+
+    for i in range(1000):
+        y = Ga.fitness(population, i)
+        new_pop = Ga.select(y, population)
+        bin_pop = Ga.encoding(population)
+        cr_pop = Ga.crossover(bin_pop)
+        mu_pop = Ga.mutation(cr_pop)
+        population = Ga.decoding(mu_pop)
+        print('generation:'+'%s' % (i+1))
+
+    print(Ga.best)
+    print(Ga.best_group)
+    fig = plt.figure()
+    plt.plot(Ga.best_history)
+    ze = [0 for i in range(1000)]
+    plt.plot(ze, color='r')
+    plt.show()
+    # print(Ga.best_history)
