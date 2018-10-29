@@ -13,7 +13,7 @@ from fit_func import f_func
 
 class GA_core(object):
 
-    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.60, mutation_rate=0.03,  **args):
+    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.5, mutation_rate=0.02,  **args):
 
         self.arg_num = arg_num
         self.ranges = arg_range
@@ -88,10 +88,14 @@ class GA_core(object):
     def initial(self, group_num, a):
 
         # initial group
-        population = np.random.uniform(
-            self.ranges[0], self.ranges[1], [group_num, self.arg_num])
-        # 保留小数位数
-        population = np.round(population, a)
+        if a == 0:
+            population = np.random.randint(
+                self.ranges[0], self.ranges[1], [group_num, self.arg_num])
+        else:
+            population = np.random.uniform(
+                self.ranges[0], self.ranges[1], [group_num, self.arg_num])
+            # 保留小数位数
+            population = np.round(population, a)
 
         return population
 
@@ -104,6 +108,8 @@ class GA_core(object):
             y[i] = f_func(population[i])
 
         best = np.min(y)
+        # func 8
+        # best = np.max(y)
         b = np.where(y == best)[0][0]
         best_pop = population[b]
 
@@ -116,26 +122,31 @@ class GA_core(object):
 
         return y
 
-    def select(self, fit, population):
+    def select(self, fit, population, neg_min):
         """
         choose better chromosome
         """
-        total = 0
-        # fit1 = fit
         l1 = population.shape[0]
         pop_new = np.empty([l1, self.arg_num])
-        # 避免出现0无法取倒数的情况
-        # fit[fit == 0] = np.power(0.1, 40)
-        # fit = np.reciprocal(fit)
-        # 仅函数5
-        fit[fit > 0] = 0
         # 只保留前50% 的个体
         nn = 2
         l = l1//nn
         pop_new1 = np.empty([l, self.arg_num])
-        # 仅函数5
-        idx = np.argsort(fit)[:l]
-        # idx = np.argsort(fit)[-l:]
+        '''
+        func 8
+        fit[fit < 0] = 0
+        idx = np.argsort(fit)[-l:]
+        # 最优值为正负时的不同操作
+        '''
+        if neg_min:
+            fit[fit > 0] = 0
+            idx = np.argsort(fit)[:l]
+        else:
+            # 避免出现0无法取倒数的情况
+            fit[fit == 0] = np.power(0.1, 40)
+            fit = np.reciprocal(fit)
+            idx = np.argsort(fit)[-l:]
+
         fit_rank = fit[idx]
         pop_rank = population[idx]
         total = np.sum(fit_rank)
@@ -154,7 +165,7 @@ class GA_core(object):
 
         return pop_new
 
-    def crossover(self, pop_new, l_max):
+    def crossover(self, pop_new):
 
         l = len(pop_new)
         p = np.random.rand(l)
@@ -180,7 +191,7 @@ class GA_core(object):
 
         return pop_new
 
-    def mutation(self, cr_pop, l_max):
+    def mutation(self, cr_pop):
 
         l = len(cr_pop)
 
@@ -209,12 +220,12 @@ if __name__ == '__main__':
         y = Ga.fitness(population, i)
         new_pop = Ga.select(y, population)
 
-        pop_max = np.max(new_pop)
-        l_max = len(bin(int(pop_max/0.0001)))-3
+        """ pop_max = np.max(new_pop)
+        l_max = len(bin(int(pop_max/0.0001)))-3 """
 
         bin_pop = Ga.encoding(new_pop)
-        cr_pop = Ga.crossover(bin_pop, l_max)
-        mu_pop = Ga.mutation(cr_pop, l_max)
+        cr_pop = Ga.crossover(bin_pop)
+        mu_pop = Ga.mutation(cr_pop)
         population = Ga.decoding(mu_pop)
         print(np.max(population))
         # ze.append(0)
