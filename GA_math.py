@@ -1,3 +1,10 @@
+"""
+author: YuanQuan Xu
+e-mail: jxgxxuyq@163.com
+
+note: It's a homework of natrue calculation, 
+which need to use GA to solve math function optimization!
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 # from mpl_toolkits.mplot3d import Axes3D
