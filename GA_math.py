@@ -6,13 +6,14 @@ note: It's a homework of natrue calculation,
 which need to use GA to solve math function optimization!
 """
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 # from mpl_toolkits.mplot3d import Axes3D
+from fit_func import f_func
 
 
 class GA_core(object):
 
-    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.7, mutation_rate=0.03,  **args):
+    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.60, mutation_rate=0.03,  **args):
 
         self.arg_num = arg_num
         self.ranges = arg_range
@@ -20,6 +21,9 @@ class GA_core(object):
         self.p_m = mutation_rate   # 0.0001~0.1,mutation when smaller than p_m
         self.accuracy = accuracy
         self.length = self.get_length()
+
+    def reset(self):
+
         self.best = 9999
         self.best_history = []
         self.best_group = []
@@ -86,18 +90,10 @@ class GA_core(object):
         # initial group
         population = np.random.uniform(
             self.ranges[0], self.ranges[1], [group_num, self.arg_num])
+        # 保留小数位数
         population = np.round(population, a)
 
         return population
-
-    def f_func(self, population):
-
-        # 1
-        y = np.power(population[0], 2) + np.power(population[1], 2)
-        # 2
-        # y =
-
-        return y
 
     def fitness(self, population, epoch):
 
@@ -105,7 +101,7 @@ class GA_core(object):
         y = np.empty(group_num)
 
         for i in range(group_num):
-            y[i] = self.f_func(population[i])
+            y[i] = f_func(population[i])
 
         best = np.min(y)
         b = np.where(y == best)[0][0]
@@ -125,14 +121,21 @@ class GA_core(object):
         choose better chromosome
         """
         total = 0
-        fit1 = fit
+        # fit1 = fit
         l1 = population.shape[0]
         pop_new = np.empty([l1, self.arg_num])
-        fit = np.reciprocal(fit)
+        # 避免出现0无法取倒数的情况
+        # fit[fit == 0] = np.power(0.1, 40)
+        # fit = np.reciprocal(fit)
+        # 仅函数5
+        fit[fit > 0] = 0
         # 只保留前50% 的个体
-        l = l1//2
+        nn = 2
+        l = l1//nn
         pop_new1 = np.empty([l, self.arg_num])
-        idx = np.argsort(fit)[-l:]
+        # 仅函数5
+        idx = np.argsort(fit)[:l]
+        # idx = np.argsort(fit)[-l:]
         fit_rank = fit[idx]
         pop_rank = population[idx]
         total = np.sum(fit_rank)
@@ -146,7 +149,7 @@ class GA_core(object):
             s = np.where(p >= c[i])[0][0]
             pop_new1[i] = pop_rank[s]
 
-        for i in range(2):
+        for i in range(nn):
             pop_new[l*i:l*(i+1)] = pop_new1
 
         return pop_new
@@ -183,7 +186,7 @@ class GA_core(object):
 
         for i in range(l):
             for k in range(self.length-1):
-                k = k + 1  # self.length-l_max
+                k = k + 1
                 for j in range(self.arg_num):
                     p = np.random.rand()
 
@@ -196,8 +199,10 @@ class GA_core(object):
 
 
 if __name__ == '__main__':
+
     Ga = GA_core(2, [-5.12, 5.12], 0.0001)
-    population = Ga.initial(20, 5)
+    Ga.reset()
+    population = Ga.initial(20)
     # ze = []
 
     for i in range(50):
