@@ -49,35 +49,63 @@ def f_func(pop):
     # 10 range (-100,100) min = 0 at (0,...,0)
     # y = np.sum(np.power(np.floor(pop + 0.5), 2))
     # 11 range (-100,100) min = 0 at (0,...,0)
-    y = np.sum([np.power(np.sum(pop[:i]), 2) for i in range(pop.shape[0])])
-    # y = np.sum(np.power(np.sum(pop), 2))
+    # y = np.sum([np.power(np.sum(pop[:i]), 2) for i in range(pop.shape[0])])
+    '''
+    s1 = 0
+    s2 = 0
+
+    for i in range(pop.shape[0]):
+        for j in range(i):
+            s1 += pop[j]
+        s2 += np.power(s1, 2)
+
+    y = s2
+    '''
     # 12 range (-10,10) min = 0 at (0,...,0)
-    # y = np.sum(np.abs(pop)) + np.nanprod(pop)
-    # 13 none
+    # y = np.sum(np.abs(pop)) + np.nanprod(np.abs(pop))
+    # 13 A = 10 range (-5.12,5.12) min = 0 at (0,...,0)
+    y = np.sum(10 + np.power(pop, 2) - 10 * np.cos(2 * np.pi * pop))
     # 14 range (-600,600) min = 0 at (0,...,0)
     '''
     s1 = np.sum(np.power(pop, 2)/4000)
+    s2 = 1
     for i in range(pop.shape[0]):
-        s2 *= np.cos(pop[i]/np.sqrt(i))+1
-    y = s1-s2
+        j = i+1
+        s2 *= np.cos(pop[i]/np.sqrt(j))
+    y = s1-s2+1
     '''
     # y = np.sum(np.power(pop, 2) / 4000) - np.nanprod(np.cos(pop) / i) + 1
     # 15 range (-32,32) min = 0 at (0,...,0)
-
+    # y = -20*np.exp(-0.2*np.sqrt(np.sum(np.power(pop, 2))/pop.shape[0])) - np.exp(
+    #   np.sum(np.cos(2 * np.pi * pop))/pop.shape[0]) + 20 + np.e
+    # pop = round(pop, 2)
     '''
-    y = -20 * np.exp(-0.2 * np.sqrt(np.sum(pop) / pop.shape[0])) - \
-        np.exp(np.sum(np.cos(2 * np.pi * pop))/pop.shape[0]) + 20 + np.e
+    s1 = 0
+    s2 = 0
+    len_p = pop.shape[0]
+    for i in range(pop.shape[0]):
+        s1 += pop[i]
+        s2 += np.cos(2*np.pi*pop[i])
+    y = -20*np.exp(-0.2*np.sqrt(s1/len_p))-np.exp(s2/len_p)+20+np.e
     '''
+    '''
+    s11 = np.sum(pop)
+    s12 = pop.shape[0]
+    s13 = np.sqrt(s11/s12)
+    s1 = -20 * np.exp(-0.2 * s13)
+    s2 = np.exp(np.sum(np.cos(2 * np.pi * pop))/pop.shape[0]) + 20 + np.e
+    y = s1-s2
+    '''
+    # print('wait')
     # 16 range (-10,10) min = 0 at (0,...,0)
     '''
     s = 0
 
-    for i in range(len(pop)-1):
-        s += np.power((pop[i+1]-pop[i])+np.sum(np.power(pop-1, 2)), 2)
+    for i in range(pop.shape[0]-1):
+        s += np.power((pop[i+1]-pop[i]), 2)+np.power(pop[i]-1, 2)
 
     y = 100*s
     '''
-
     return y
 
 
