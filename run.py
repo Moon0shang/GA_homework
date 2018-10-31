@@ -7,8 +7,8 @@ def run(population, accuracy):
 
     neg_min = False
 
-    for i in range(3000):
-        y = Ga.fitness(population, i)
+    for i in range(5000):
+        y = Ga.fitness(population)
         # 判断最优值正负
         if np.min(y) < 0:
             neg_min = True
@@ -18,6 +18,7 @@ def run(population, accuracy):
         cr_pop = Ga.crossover(bin_pop)
         mu_pop = Ga.mutation(cr_pop)
         population = Ga.decoding(mu_pop)
+
         # print('generation:'+'%s' % (i+1))
 
 
@@ -34,17 +35,18 @@ def visualize(i):
              "best value:%s" % np.round(y, 6))
     plt.xlabel('generation')
     plt.ylabel('f(x,y)')
-    plt.savefig('C:/Users/X/Desktop/GA_math/11/%s.png' % i)
+    plt.savefig('C:/Users/X/Desktop/GA_math/13/%s.png' % i)
     plt.close()
 
 
 accuracy = 0.1
-Ga = GA_core(30, [-100, 100], accuracy)
+Ga = GA_core(30, [-5.12, 5.12], accuracy,
+             crossover_rate=0.5, mutation_rate=0.0045)
 
 
 for i in range(30):
     Ga.reset()
-    population = Ga.initial(50, 1)
+    population = Ga.initial(100, 2)
     run(population, accuracy)
     # np.savetxt('C:/Users/X/Desktop/GA_math/2/%s.txt' % i, Ga.best_group_his)
     visualize(i)
