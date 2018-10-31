@@ -13,7 +13,7 @@ from fit_func import f_func
 
 class GA_core(object):
 
-    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.5, mutation_rate=0.02,  **args):
+    def __init__(self, arg_num, arg_range, accuracy, crossover_rate=0.6, mutation_rate=0.06):
 
         self.arg_num = arg_num
         self.ranges = arg_range
@@ -23,21 +23,21 @@ class GA_core(object):
         self.length = self.get_length()
 
     def reset(self):
-
-        self.best = 9999
+        """重置基本参数"""
+        self.best = 999999
         self.best_history = []
         self.best_group = []
         self.best_group_his = []
 
     def get_length(self):
-
+        """获取最大二进制长度"""
         bin_ranges = bin(int(self.ranges[1] / self.accuracy)).replace('0b', '')
         single_length = len(bin_ranges) + 1
 
         return single_length
 
     def encoding(self, population):
-
+        """编码"""
         g_n = population.shape[0]
         a_n = population.shape[1]
         list_pop = []
@@ -70,13 +70,12 @@ class GA_core(object):
         return list_pop
 
     def decoding(self, list_pop):
-
+        """解码"""
         l = len(list_pop)
-        bin_pop = []
+        num_pop = np.empty([l, self.arg_num])
 
         for i in range(l):
             list_pop[i] = ''.join(list_pop[i])
-        num_pop = np.empty([l, self.arg_num])
 
         for i in range(l):
             for j in range(self.arg_num):
@@ -86,8 +85,7 @@ class GA_core(object):
         return num_pop
 
     def initial(self, group_num, a):
-
-        # initial group
+        """初始化种群"""
         if a == 0:
             population = np.random.randint(
                 self.ranges[0], self.ranges[1], [group_num, self.arg_num])
@@ -99,8 +97,8 @@ class GA_core(object):
 
         return population
 
-    def fitness(self, population, epoch):
-
+    def fitness(self, population):
+        """计算种群适应度"""
         group_num = len(population)
         y = np.empty(group_num)
 
@@ -123,9 +121,7 @@ class GA_core(object):
         return y
 
     def select(self, fit, population, neg_min):
-        """
-        choose better chromosome
-        """
+        """对种群进行选择"""
         l1 = population.shape[0]
         pop_new = np.empty([l1, self.arg_num])
         # 只保留前50% 的个体
@@ -136,8 +132,8 @@ class GA_core(object):
         func 8
         fit[fit < 0] = 0
         idx = np.argsort(fit)[-l:]
-        # 最优值为正负时的不同操作
         '''
+        # 最优值为正负时的不同操作
         if neg_min:
             fit[fit > 0] = 0
             idx = np.argsort(fit)[:l]
@@ -166,7 +162,7 @@ class GA_core(object):
         return pop_new
 
     def crossover(self, pop_new):
-
+        """交叉操作"""
         l = len(pop_new)
         p = np.random.rand(l)
         mating = np.where(p > self.p_c)[0]
@@ -192,7 +188,7 @@ class GA_core(object):
         return pop_new
 
     def mutation(self, cr_pop):
-
+        """变异操作"""
         l = len(cr_pop)
 
         for i in range(l):
