@@ -34,11 +34,11 @@ def cal_dis(loc):
     return dis
 
 
-lo, d = read_info()
-ds = cal_dis(lo)
-print('--------locations--------')
-print(lo)
-print('--------distance--------')
-print(d)
-print('--------dis--------')
-print(ds)
+def fitness(pop, dis):
+    """获取长度"""
+    total_dis = dis[pop[0]][pop[-1]]
+
+    for i in range(len(pop)-1):
+        total_dis += dis[pop[i]][pop[i + 1]]
+
+    return total_dis
