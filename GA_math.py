@@ -136,6 +136,7 @@ class GA_core(object):
         # 最优值为正负时的不同操作
         if neg_min:
             fit[fit > 0] = 0
+            # argsort 将fit值由小到大的顺序排列并输出原索引
             idx = np.argsort(fit)[:l]
         else:
             # 避免出现0无法取倒数的情况
@@ -176,7 +177,7 @@ class GA_core(object):
             mating = mating[:-1]
             l_v = len(mating)
 
-        for i in range(int(l_v/2)):
+        for i in range(l_v//2):
             pos = np.random.randint(1, self.length)
             for j in range(self.arg_num):
                 idx1 = pos + self.length*j

@@ -26,7 +26,7 @@ def visualize(i):
 
     # 趋势图
     fig = plt.figure()
-    plt.plot(Ga.best_history)
+    plt.plot(Ga.baddest_history)
     # plt.plot(ze, c='r')
     y = np.min(Ga.best_history)
     x = np.where(Ga.best_history == y)[0][0]
@@ -39,15 +39,16 @@ def visualize(i):
     plt.close()
 
 
-accuracy = 0.1
-Ga = GA_core(30, [-5.12, 5.12], accuracy,
-             crossover_rate=0.5, mutation_rate=0.0045)
+if __name__ == '__main__':
 
+    accuracy = 0.1
+    Ga = GA_core(30, [-5.12, 5.12], accuracy,
+                 crossover_rate=0.5, mutation_rate=0.0045)
 
-for i in range(30):
-    Ga.reset()
-    population = Ga.initial(100, 2)
-    run(population, accuracy)
-    # np.savetxt('C:/Users/X/Desktop/GA_math/2/%s.txt' % i, Ga.best_group_his)
-    visualize(i)
-    print('output pic%s' % i)
+    for i in range(30):
+        Ga.reset()
+        population = Ga.initial(100, 2)
+        run(population, accuracy)
+        # np.savetxt('C:/Users/X/Desktop/GA_math/2/%s.txt' % i, Ga.best_group_his)
+        visualize(i)
+        print('output pic%s' % i)
