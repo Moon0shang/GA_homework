@@ -7,7 +7,6 @@ note: It's a homework of natrue calculation, which need to use GA to solve TSP p
 """
 
 import numpy as np
-from fit_tsp import fit_func
 
 
 class GA_core(object):
@@ -18,8 +17,11 @@ class GA_core(object):
         self.p_m = muta_rate
         self.g_num = group_num
         self.city_num = city_num
+
+    def reset(self):
         self.best = 99999999
         self.best_history = []
+        self.best_group = None
 
     def initail(self):
         """初始化"""
@@ -31,11 +33,17 @@ class GA_core(object):
 
         return population
 
-    def fitness(self, pop):
+    def fitness(self, pop, dis):
         """计算适应度"""
         y = np.empty(self.g_num)
+
         for i in range(self.g_num):
-            y[i] = fit_func(pop[i])
+            total_dis = dis[pop[i][0]][pop[i][-1]]
+
+            for j in range(self.city_num-1):
+                total_dis += dis[pop[i][j]][pop[i][j + 1]]
+
+            y[i] = total_dis
 
         best = np.min(y)
         b = np.where(y == best)[0][0]
@@ -56,8 +64,8 @@ class GA_core(object):
         p = np.cumsum(p0)
         p[-1] = 1
         c = np.random.rand(self.g_num)
+        pop_new = [None] * self.g_num
 
-        pop_new = [None]*self.g_num
         for i in range(self.g_num):
             s = np.where(p >= c[i])[0][0]
             pop_new[i] = pop[i]
@@ -69,20 +77,41 @@ class GA_core(object):
         p = np.random.rand(self.g_num)
         mating = np.where(p > self.p_c)[0]
         np.random.shuffle(mating)
+        city_code = [i for i in range(self.city_num)]
         l_v = len(mating)
 
         if l_v == 0:
             return pop
+
         elif l_v % 2 != 0:
-            mating = mating[:-1]
+            mating.pop()
             l_v = len(mating)
 
         for i in range(l_v // 2):
-            pos = np.random.randint(1, self.city_num,)
-            pop[mating[2 * i][pos:]], pop[mating[2 * i + 1][pos:]
-                                          ] = pop[mating[2 * i + 1][pos:]], pop[mating[2 * i][pos:]]
+            pos = np.sort(np.random.choice(city_code, 2))
+            new_pop1 = pop[mating[2 * i]][pos[0]:pos[1]]
+            new_pop2 = pop[mating[2 * i + 1]][pos[0]: pos[1]]
+            pop[mating[2 * i]
+                ] = self.gen_new(pop[mating[2 * i]], pos, new_pop2)
+            pop[mating[2 * i + 1]
+                ] = self.gen_new(pop[mating[2 * i + 1]], pos, new_pop1)
 
         return pop
+
+    def gen_new(self, mating, pos, seg_pop):
+        """产生交叉后的新后代"""
+        pop_temp = []
+
+        for i in mating:
+
+            if i not in seg_pop:
+                pop_temp.append(i)
+
+        mating[0:pos[0]] = pop_temp[0:pos[0]]
+        mating[pos[0]: pos[1]] = seg_pop
+        mating[pos[1]:] = pop_temp[pos[1]:]
+
+        return mating
 
     def mutation(self, population):
         """变异"""
@@ -94,8 +123,3 @@ class GA_core(object):
                 pop[pos[0]], pop[pos[1]] = pop[pos[1]], pop[pos[0]]
 
         return population
-
-    def evolution(self):
-        """种群进化"""
-        '''可能用不上'''
-        pass
