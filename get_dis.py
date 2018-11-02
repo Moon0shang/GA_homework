@@ -3,7 +3,7 @@ import numpy as np
 
 def read_info():
     """读取tsp坐标数据"""
-    with open('./ch150.tsp', 'r') as f:
+    with open('./tsp_data/ch150.tsp', 'r') as f:
         raw = f.read().split('NODE_COORD_SECTION')
 
     loc_list = raw[1].split('EOF')[0].replace('\n', ' ').split(' ')
