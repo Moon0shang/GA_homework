@@ -6,8 +6,7 @@ note: It's a homework of natrue calculation,
 which need to use GA to solve math function optimization!
 """
 import numpy as np
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
+
 from fit_func import f_func
 
 
@@ -26,8 +25,7 @@ class GA_core(object):
         """重置基本参数"""
         self.best = 999999
         self.best_history = []
-        self.best_group = []
-        self.best_group_his = []
+        self.best_group = None
 
     def get_length(self):
         """获取最大二进制长度"""
@@ -116,7 +114,6 @@ class GA_core(object):
             self.best_group.append(best_pop)
 
         self.best_history.append(best)
-        self.best_group_his.append(best_pop)
 
         return y
 
@@ -204,59 +201,3 @@ class GA_core(object):
                             np.abs(int(cr_pop[i][k+j*self.length])-1))
 
         return cr_pop
-
-
-if __name__ == '__main__':
-
-    Ga = GA_core(2, [-5.12, 5.12], 0.0001)
-    Ga.reset()
-    population = Ga.initial(20)
-    # ze = []
-
-    for i in range(50):
-        y = Ga.fitness(population, i)
-        new_pop = Ga.select(y, population)
-
-        """ pop_max = np.max(new_pop)
-        l_max = len(bin(int(pop_max/0.0001)))-3 """
-
-        bin_pop = Ga.encoding(new_pop)
-        cr_pop = Ga.crossover(bin_pop)
-        mu_pop = Ga.mutation(cr_pop)
-        population = Ga.decoding(mu_pop)
-        print(np.max(population))
-        # ze.append(0)
-        """ if i == 0:
-            m_fit = [Ga.best-0.00001]
-        else:
-            if Ga.best < m_fit[i - 1]:
-                m_fit.append(Ga.best-0.00001)
-            else:
-                m_fit.append(m_fit[i-1]) """
-        print('generation:'+'%s' % (i+1))
-
-    print(Ga.best)
-    print(Ga.best_group)
-    # 趋势图
-    fig = plt.figure()
-    plt.plot(Ga.best_history)
-    # plt.plot(ze, c='r')
-    y = np.min(Ga.best_history)
-    x = np.where(Ga.best_history == y)[0][0]
-    plt.scatter(x, y, c='r')
-    plt.text(x-3, y+np.max(Ga.best_history)/20, "meet best value:%s" % y)
-    plt.xlabel('generation')
-    plt.ylabel('f(x,y)')
-    plt.show()
-    """ # 曲面图
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    z = Ga.best_history
-    l_his = len(Ga.best_group_his)
-    x = np.empty(l_his)
-    y = np.empty(l_his)
-    for i in range(l_his):
-        x[i] = Ga.best_group_his[i][0]
-        y[i] = Ga.best_group_his[i][1]
-    ax.plot3D(x, y, z)
-    plt.show() """

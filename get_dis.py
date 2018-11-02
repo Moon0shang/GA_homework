@@ -6,11 +6,10 @@ def read_info():
     with open('./ch150.tsp', 'r') as f:
         raw = f.read().split('NODE_COORD_SECTION')
 
-    loc_list = raw[1].split('EOF')[0].replace('\n', '').split(' ')
+    loc_list = raw[1].split('EOF')[0].replace('\n', ' ').split(' ')
     loc_valid = list(filter(lambda n: n != '', loc_list))
-    loc_raw = list(filter(lambda n: len(n) > 2, loc_valid))
-    locations = np.array(loc_raw, dtype=np.float32)
-    locations = locations.reshape(len(locations) // 2, 2)
+    loc_raw = np.array(loc_valid, dtype=np.float).reshape(len(loc_valid)//3, 3)
+    locations = loc_raw[:, 1:]
 
     """     dis = raw[0].split('EDGE_WEIGHT_SECTION')[1]
     dis_list = dis.replace('\n', '').split(' ')

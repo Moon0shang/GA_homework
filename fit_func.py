@@ -102,9 +102,9 @@ def f_func(pop):
     s = 0
 
     for i in range(pop.shape[0]-1):
-        s += np.power((pop[i+1]-pop[i]), 2)+np.power(pop[i]-1, 2)
+        s += 100*np.power((pop[i+1]-pop[i]), 2)+np.power(pop[i]-1, 2)
 
-    y = 100*s
+    y = s
     '''
     return y
 
