@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import multiprocessing as mp
@@ -66,10 +67,10 @@ def mul_process(name):
     distances = cal_dis(locations)
     city_num = locations.shape[0]
     start = 0
-    tsp = GA_core(cross_rate=0.6, muta_rate=0.01,
+    tsp = GA_core(cross_rate=0.6, muta_rate=0.06,
                   group_num=100, city_num=city_num,
                   dis=distances)
-    for i in range(2):
+    for i in range(10):
         print('generation %s' % i)
         tsp.reset()
         populations = tsp.initail(start)
@@ -81,6 +82,11 @@ def mul_process(name):
 
 
 if __name__ == '__main__':
+
+    try:
+        os.mkdir('./tsp')
+    except:
+        print('file tsp already exist!')
 
     p1 = mp.Process(target=mul_process, args=('1-',))
     p2 = mp.Process(target=mul_process, args=('2-',))

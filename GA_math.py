@@ -111,7 +111,7 @@ class GA_core(object):
 
         if best < self.best:
             self.best = best
-            self.best_group.append(best_pop)
+            self.best_group = best_pop
 
         self.best_history.append(best)
 
@@ -161,6 +161,7 @@ class GA_core(object):
 
     def crossover(self, pop_new):
         """交叉操作"""
+        # pop_ori = pop_new
         l = len(pop_new)
         p = np.random.rand(l)
         mating = np.where(p > self.p_c)[0]
