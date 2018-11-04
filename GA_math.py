@@ -117,13 +117,13 @@ class GA_core(object):
 
         return y
 
-    def select(self, fit, population, neg_min):
+    def select(self, group_num, fit, population, neg_min):
         """对种群进行选择"""
-        l1 = population.shape[0]
-        pop_new = np.empty([l1, self.arg_num])
+        # l1 = population.shape[0]
+        pop_new = np.empty([group_num, self.arg_num])
         # 只保留前50% 的个体
         nn = 2
-        l = l1//nn
+        l = group_num//nn
         pop_new1 = np.empty([l, self.arg_num])
         '''
         func 8
@@ -161,7 +161,7 @@ class GA_core(object):
 
     def crossover(self, pop_new):
         """交叉操作"""
-        # pop_ori = pop_new
+        pop_ori = pop_new
         l = len(pop_new)
         p = np.random.rand(l)
         mating = np.where(p > self.p_c)[0]
@@ -184,12 +184,14 @@ class GA_core(object):
                 pop_new[mating[i*2]][idx1:idx2] = pop_new[mating[i*2+1]][idx1:idx2]
                 pop_new[mating[i*2+1]][idx1:idx2] = t
 
-        return pop_new
+        cr_pop = pop_new + pop_ori
+
+        return cr_pop
 
     def mutation(self, cr_pop):
         """变异操作"""
         l = len(cr_pop)
-
+        pop_ori = cr_pop
         for i in range(l):
             for k in range(self.length-1):
                 k = k + 1
@@ -201,4 +203,6 @@ class GA_core(object):
                         cr_pop[i][k+j*self.length] = str(
                             np.abs(int(cr_pop[i][k+j*self.length])-1))
 
-        return cr_pop
+        mu_pop = pop_ori + cr_pop
+
+        return mu_pop
