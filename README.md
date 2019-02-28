@@ -1,2 +1,2 @@
 # GA_homework
-it's a homework of nature calculating
+it's a homework of natural computation
